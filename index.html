@@ -1,0 +1,2521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RespiCore — Acoustic Respiratory Triage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050d14;
+  --bg2: #0a1520;
+  --bg3: #0f1e2d;
+  --card: #0d1b28;
+  --card2: #112030;
+  --border: rgba(120,200,255,0.08);
+  --border2: rgba(120,200,255,0.15);
+  --accent: #00c8ff;
+  --accent2: #0090d4;
+  --accent-dim: rgba(0,200,255,0.12);
+  --accent-glow: rgba(0,200,255,0.25);
+  --green: #00e5a0;
+  --green-dim: rgba(0,229,160,0.12);
+  --amber: #ffb830;
+  --amber-dim: rgba(255,184,48,0.12);
+  --red: #ff4d6a;
+  --red-dim: rgba(255,77,106,0.12);
+  --text: #e8f4ff;
+  --text2: #7aa8cc;
+  --text3: #4a7a9b;
+  --mono: 'DM Mono', monospace;
+  --serif: 'DM Serif Display', serif;
+  --sans: 'Syne', sans-serif;
+  --r: 12px;
+  --r2: 20px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Grid background ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  height: 64px;
+  background: rgba(5,13,20,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 32px; height: 32px;
+  border: 1.5px solid var(--accent);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.logo-icon svg { width: 18px; height: 18px; }
+
+.logo-text {
+  font-family: var(--sans);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+
+.logo-text span { color: var(--accent); }
+
+.nav-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 2px 7px;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.nav-links a {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--accent); }
+
+.lang-switcher { display:flex;gap:4px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:3px; }
+.lang-btn { font-family:var(--mono);font-size:10px;letter-spacing:0.08em;padding:5px 10px;border-radius:6px;border:none;background:transparent;color:var(--text3);cursor:pointer;transition:all 0.2s;font-weight:500; }
+.lang-btn.active { background:var(--accent);color:#050d14; }
+.lang-btn:hover:not(.active) { color:var(--text);background:rgba(120,200,255,0.08); }
+.btn-about { font-family:var(--sans);font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;border:1px solid var(--accent);padding:7px 16px;border-radius:var(--r);transition:all 0.2s;display:flex;align-items:center;gap:6px;white-space:nowrap;margin-top:-4px; }
+.btn-about:hover { background:var(--accent);color:#050d14; }
+
+/* ── HERO ── */
+#hero {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px 60px;
+  text-align: center;
+}
+
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.2s forwards;
+}
+
+.hero-title {
+  font-family: var(--serif);
+  font-size: clamp(48px, 7vw, 88px);
+  line-height: 1.05;
+  color: var(--text);
+  margin-bottom: 10px;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.35s forwards;
+}
+
+.hero-title em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.hero-subtitle {
+  font-family: var(--sans);
+  font-size: clamp(14px, 2vw, 17px);
+  color: var(--text2);
+  max-width: 560px;
+  line-height: 1.7;
+  margin: 0 auto 48px;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.5s forwards;
+}
+
+/* Breathing circle viz */
+.hero-viz {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  margin: 0 auto 56px;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.65s forwards;
+}
+
+.breath-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.br1 { width: 80px; height: 80px; border-color: var(--accent); opacity: 0.9; animation: breathe 4s ease-in-out infinite; }
+.br2 { width: 120px; height: 120px; border-color: var(--accent); opacity: 0.45; animation: breathe 4s ease-in-out 0.3s infinite; }
+.br3 { width: 160px; height: 160px; border-color: var(--accent); opacity: 0.2; animation: breathe 4s ease-in-out 0.6s infinite; }
+.br4 { width: 200px; height: 200px; border-color: var(--accent); opacity: 0.08; animation: breathe 4s ease-in-out 0.9s infinite; }
+
+.breath-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px; height: 60px;
+  background: var(--accent-dim);
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.breath-center svg { width: 24px; height: 24px; color: var(--accent); }
+
+@keyframes breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: inherit; }
+  50% { transform: translate(-50%, -50%) scale(1.12); }
+}
+
+.hero-stats {
+  display: flex;
+  gap: 48px;
+  justify-content: center;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.8s forwards;
+  margin-bottom: 48px;
+}
+
+.stat-item { text-align: center; }
+
+.stat-num {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--accent);
+  display: block;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 4px;
+  display: block;
+}
+
+.cta-row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.95s forwards;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #050d14;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 14px 32px;
+  border-radius: var(--r);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary:hover {
+  background: #33d6ff;
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text2);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 13px 28px;
+  border-radius: var(--r);
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn-outline:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── SECTION ── */
+.section {
+  position: relative;
+  z-index: 1;
+  padding: 100px 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.section-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.section-title {
+  font-family: var(--serif);
+  font-size: clamp(32px, 4vw, 52px);
+  line-height: 1.1;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.section-sub {
+  font-size: 15px;
+  color: var(--text2);
+  line-height: 1.7;
+  max-width: 520px;
+}
+
+/* ── DEMO SECTION ── */
+#demo {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 100px 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.demo-inner {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.demo-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Recording card */
+.demo-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 32px;
+  transition: border-color 0.3s;
+}
+
+.demo-card.active-card {
+  border-color: var(--accent);
+  box-shadow: 0 0 40px rgba(0,200,255,0.08);
+}
+
+.card-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-label-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text3);
+}
+
+.card-label-dot.live { background: var(--red); animation: blink 1s infinite; }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* Waveform display */
+.waveform-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  height: 100px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.waveform-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.waveform-idle {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 0.1em;
+}
+
+/* Timer */
+.timer-display {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.timer-ring-wrap {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 12px;
+}
+
+.timer-ring-wrap svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+
+.timer-ring-track { fill: none; stroke: var(--border2); stroke-width: 3; }
+.timer-ring-prog {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 283;
+  stroke-dashoffset: 283;
+  transition: stroke-dashoffset 1s linear;
+}
+
+.timer-num {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--mono);
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.timer-label {
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Record button */
+.record-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--r);
+  border: none;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--accent);
+  color: #050d14;
+}
+
+.record-btn:hover { background: #33d6ff; }
+.record-btn.recording {
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid var(--red);
+}
+
+.record-btn.processing {
+  background: var(--amber-dim);
+  color: var(--amber);
+  border: 1px solid var(--amber);
+  cursor: not-allowed;
+}
+
+/* Condition selector */
+.condition-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.cond-btn {
+  padding: 10px 12px;
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text2);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  line-height: 1.3;
+}
+
+.cond-btn:hover { border-color: var(--border2); color: var(--text); }
+
+.cond-btn.selected-normal   { border-color: var(--green);  background: var(--green-dim); color: var(--green); }
+.cond-btn.selected-anomalous { border-color: var(--amber); background: var(--amber-dim); color: var(--amber); }
+.cond-btn.selected-wheeze   { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+.cond-btn.selected-copd     { border-color: var(--red);   background: var(--red-dim); color: var(--red); }
+
+.cond-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: 7px;
+  vertical-align: middle;
+}
+
+/* Results card */
+.results-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 32px;
+  min-height: 400px;
+}
+
+.results-empty {
+  height: 100%;
+  min-height: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text3);
+}
+
+.results-empty svg { width: 40px; height: 40px; opacity: 0.4; }
+
+.results-empty p {
+  font-size: 13px;
+  font-family: var(--mono);
+  letter-spacing: 0.08em;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* Result display */
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.risk-normal   { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+.risk-anomalous { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber); }
+.risk-wheeze   { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); }
+.risk-copd     { background: var(--red-dim);   color: var(--red);   border: 1px solid var(--red); }
+
+.risk-headline {
+  font-family: var(--serif);
+  font-size: 30px;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.risk-confidence {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text3);
+  margin-bottom: 28px;
+}
+
+.prob-row {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.prob-item {}
+
+.prob-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.prob-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  letter-spacing: 0.04em;
+}
+
+.prob-pct {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.prob-track {
+  height: 6px;
+  background: var(--bg3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.prob-fill {
+  height: 100%;
+  border-radius: 4px;
+  width: 0%;
+  transition: width 1s cubic-bezier(0.4,0,0.2,1);
+}
+
+.fill-green  { background: var(--green); }
+.fill-amber  { background: var(--amber); }
+.fill-accent { background: var(--accent); }
+.fill-red    { background: var(--red); }
+
+.spectrogram-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  height: 80px;
+  overflow: hidden;
+  position: relative;
+}
+
+.spec-canvas { width: 100%; height: 100%; display: block; }
+
+.result-meta {
+  display: flex;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.meta-chip {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 0.08em;
+  background: var(--bg3);
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+/* ── PIPELINE SECTION ── */
+.pipeline-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  margin-top: 60px;
+}
+
+.pipeline-steps::before {
+  content: '';
+  position: absolute;
+  left: 27px;
+  top: 28px;
+  bottom: 28px;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--accent), var(--accent2), transparent);
+  opacity: 0.3;
+}
+
+.pipe-step {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 24px;
+  align-items: start;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pipe-step:last-child { border-bottom: none; }
+.pipe-step:hover .pipe-content { color: var(--text); }
+
+.pipe-num {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+  border: 1px solid var(--border2);
+  color: var(--accent);
+  background: var(--accent-dim);
+  transition: all 0.2s;
+}
+
+.pipe-step:hover .pipe-num {
+  background: var(--accent);
+  color: #050d14;
+  border-color: var(--accent);
+}
+
+.pipe-title {
+  font-family: var(--sans);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.pipe-desc {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.65;
+  margin-bottom: 8px;
+}
+
+.pipe-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid rgba(0,200,255,0.2);
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  letter-spacing: 0.06em;
+  margin-right: 6px;
+}
+
+/* ── TECH STACK ── */
+.tech-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 60px;
+}
+
+.tech-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 28px 24px;
+  transition: border-color 0.25s, transform 0.25s;
+  cursor: default;
+}
+
+.tech-card:hover {
+  border-color: var(--border2);
+  transform: translateY(-3px);
+}
+
+.tech-icon {
+  font-size: 28px;
+  margin-bottom: 14px;
+  display: block;
+}
+
+.tech-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+
+.tech-role {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.tech-desc {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+/* ── ACCURACY SECTION ── */
+#metrics {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 100px 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.metrics-inner { max-width: 1100px; margin: 0 auto; }
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 60px;
+}
+
+.metric-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.metric-num {
+  font-family: var(--serif);
+  font-size: 48px;
+  color: var(--accent);
+  display: block;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.metric-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.metric-detail {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  line-height: 1.5;
+}
+
+/* ── HISTORY ── */
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 40px;
+}
+
+.history-table th {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+  text-transform: uppercase;
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+}
+
+.history-table td {
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.history-table tr:last-child td { border-bottom: none; }
+.history-table tr:hover td { background: var(--card); }
+
+.h-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+/* ── FOOTER ── */
+footer {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--border);
+  padding: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-note {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 0.06em;
+}
+
+.footer-warning {
+  font-size: 11px;
+  color: var(--amber);
+  background: var(--amber-dim);
+  border: 1px solid rgba(255,184,48,0.2);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+}
+
+/* Divider */
+.divider {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ── MOBILE BOTTOM DASHBOARD NAV ── */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 9000;
+  background: rgba(10, 21, 32, 0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border2);
+  padding: 8px 0 env(safe-area-inset-bottom, 8px);
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
+  touch-action: manipulation;
+}
+
+.mobile-nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+}
+
+.mnav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  background: transparent;
+  transition: all 0.2s;
+  flex: 1;
+  max-width: 72px;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  color: var(--text3);
+  user-select: none;
+}
+
+.mnav-item * {
+  pointer-events: none;
+}
+
+.mnav-item svg {
+  width: 20px; height: 20px;
+  stroke: var(--text3);
+  transition: stroke 0.2s, transform 0.2s;
+  display: block;
+  flex-shrink: 0;
+}
+
+.mnav-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+  text-transform: uppercase;
+  transition: color 0.2s;
+  white-space: nowrap;
+  display: block;
+}
+
+.mnav-item.active svg { stroke: var(--accent); }
+.mnav-item.active .mnav-label { color: var(--accent); }
+.mnav-item:active { opacity: 0.7; transform: scale(0.95); }
+
+.mnav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--accent);
+}
+
+/* Reviews lock badge */
+.mnav-lock {
+  position: absolute;
+  top: 4px; right: 8px;
+  font-size: 8px;
+  opacity: 0.6;
+}
+
+/* Mobile hamburger */
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: var(--text2);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Mobile nav drawer */
+.mobile-drawer {
+  display: none;
+  position: fixed;
+  top: 0; right: 0;
+  width: min(300px, 85vw);
+  height: 100vh;
+  background: var(--bg2);
+  border-left: 1px solid var(--border2);
+  z-index: 9200;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  padding: 60px 20px calc(80px + env(safe-area-inset-bottom, 0px));
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-drawer.open { transform: translateX(0); }
+
+.mobile-drawer-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(5,13,20,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  touch-action: manipulation;
+}
+
+.mobile-drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+.mobile-drawer a, .mobile-drawer button.drawer-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-radius: var(--r);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text2);
+  text-decoration: none;
+  transition: all 0.2s;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--sans);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.mobile-drawer a:active, .mobile-drawer button.drawer-link:active {
+  background: var(--card);
+  color: var(--accent);
+  opacity: 0.85;
+}
+
+.drawer-section-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--text3);
+  text-transform: uppercase;
+  padding: 10px 16px 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+.drawer-close {
+  position: absolute;
+  top: 20px; right: 16px;
+  background: none; border: none;
+  color: var(--text3); cursor: pointer;
+  padding: 8px; border-radius: 8px;
+}
+
+.drawer-close:hover { color: var(--text); background: var(--card); }
+
+/* ── COMPREHENSIVE RESPONSIVE ── */
+@media (max-width: 768px) {
+  /* Show mobile nav, hide desktop nav links */
+  .mobile-nav { display: block; }
+  .mobile-menu-btn { display: flex; }
+  .mobile-drawer { display: flex; }
+  .mobile-drawer-overlay { display: block; }
+  .nav-links { display: none; }
+
+  /* Spacing fixes for bottom nav */
+  body { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+
+  /* Nav */
+  nav { padding: 0 16px; height: 56px; }
+
+  /* Hero */
+  #hero { padding: 72px 20px 40px; min-height: auto; }
+  .hero-title { font-size: clamp(36px, 9vw, 56px); }
+  .hero-subtitle { font-size: 14px; margin-bottom: 32px; }
+  .hero-viz { width: 160px; height: 160px; margin-bottom: 36px; }
+  .br4 { width: 150px; height: 150px; }
+  .br3 { width: 120px; height: 120px; }
+  .br2 { width: 90px; height: 90px; }
+  .br1 { width: 60px; height: 60px; }
+  .hero-stats { gap: 24px; flex-wrap: wrap; margin-bottom: 32px; }
+  .stat-num { font-size: 22px; }
+  .cta-row { flex-direction: column; align-items: center; gap: 12px; }
+  .btn-primary, .btn-outline { width: 100%; max-width: 320px; justify-content: center; }
+
+  /* Sections */
+  .section { padding: 56px 20px; }
+  .section-title { font-size: clamp(26px, 7vw, 36px); }
+
+  /* Demo */
+  #demo { padding: 56px 20px; }
+  .demo-grid { grid-template-columns: 1fr; gap: 16px; }
+  .demo-card { padding: 24px 20px; }
+  .results-card { padding: 24px 20px; min-height: 320px; }
+  .condition-picker { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .timer-ring-wrap { width: 80px; height: 80px; }
+  .timer-ring-wrap svg { width: 80px; height: 80px; }
+  .timer-num { font-size: 22px; }
+
+  /* Pipeline */
+  .pipe-step { grid-template-columns: 44px 1fr; gap: 16px; }
+  .pipe-num { width: 44px; height: 44px; font-size: 12px; }
+  .pipeline-steps::before { left: 21px; }
+
+  /* Tech */
+  .tech-grid { grid-template-columns: 1fr; gap: 12px; }
+  .tech-card { padding: 20px 16px; }
+
+  /* Metrics */
+  #metrics { padding: 56px 20px; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .metric-card { padding: 24px 16px; }
+  .metric-num { font-size: 36px; }
+
+  /* History table → card layout */
+  .history-table thead { display: none; }
+  .history-table, .history-table tbody, .history-table tr, .history-table td {
+    display: block; width: 100%;
+  }
+  .history-table tr {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    margin-bottom: 10px;
+    padding: 14px 16px;
+  }
+  .history-table td {
+    border: none;
+    padding: 3px 0;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .history-table td::before {
+    content: attr(data-label);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--text3);
+    text-transform: uppercase;
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+  .history-table td[colspan] { justify-content: center; padding: 8px 0; }
+  .history-table td[colspan]::before { display: none; }
+
+  /* Footer */
+  footer { flex-direction: column; gap: 12px; text-align: center; padding: 28px 20px calc(28px + env(safe-area-inset-bottom, 0px)); }
+
+  /* Login modal */
+  .login-modal { padding: 36px 24px; border-radius: 20px; }
+
+  /* Result meta chips scroll */
+  .result-meta { flex-wrap: wrap; gap: 8px; }
+}
+
+/* ── GOOGLE LOGIN ── */
+.btn-login {
+  display:flex; align-items:center; gap:8px;
+  font-family:var(--sans); font-size:12px; font-weight:600;
+  padding:7px 14px; border-radius:var(--r);
+  border:1px solid var(--border2); background:transparent;
+  color:var(--text2); cursor:pointer; transition:all 0.2s;
+  text-decoration:none; white-space:nowrap;
+}
+.btn-login:hover { border-color:var(--accent); color:var(--accent); }
+.btn-login .g-icon { width:14px; height:14px; flex-shrink:0; }
+
+.user-pill {
+  display:flex; align-items:center; gap:8px;
+  font-family:var(--sans); font-size:12px; font-weight:600; color:var(--text2);
+  cursor:pointer; position:relative;
+}
+.user-avatar {
+  width:28px; height:28px; border-radius:50%; overflow:hidden;
+  border:1.5px solid var(--accent); flex-shrink:0;
+}
+.user-avatar img { width:100%; height:100%; object-fit:cover; }
+.user-name-short { max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* Login overlay */
+.login-overlay {
+  position:fixed; inset:0; z-index:999;
+  background:rgba(5,13,20,0.75); backdrop-filter:blur(8px);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity 0.3s;
+}
+.login-overlay.open { opacity:1; pointer-events:all; }
+
+.login-modal {
+  background:var(--bg2); border:1px solid var(--border2);
+  border-radius:24px; padding:48px 40px; width:420px; max-width:90vw;
+  position:relative; transform:translateY(24px) scale(0.97);
+  transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  overflow:hidden;
+}
+.login-modal::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 0%, rgba(0,200,255,0.07) 0%, transparent 60%);
+  pointer-events:none;
+}
+.login-overlay.open .login-modal { transform:translateY(0) scale(1); }
+
+.modal-close {
+  position:absolute; top:16px; right:16px;
+  background:none; border:none; cursor:pointer; color:var(--text3);
+  padding:6px; border-radius:6px; transition:color 0.2s;
+}
+.modal-close:hover { color:var(--text); }
+
+.modal-logo {
+  display:flex; align-items:center; gap:10px; margin-bottom:32px; justify-content:center;
+}
+.modal-logo-icon {
+  width:36px; height:36px; border:1.5px solid var(--accent);
+  border-radius:9px; display:flex; align-items:center; justify-content:center;
+}
+
+.modal-title {
+  font-family:var(--serif); font-size:28px; color:var(--text);
+  text-align:center; margin-bottom:8px; line-height:1.1;
+}
+.modal-sub {
+  font-size:13px; color:var(--text2); text-align:center;
+  line-height:1.65; margin-bottom:32px;
+}
+
+.demo-notice {
+  background:rgba(255,184,48,0.08); border:1px solid rgba(255,184,48,0.2);
+  border-radius:10px; padding:12px 16px; margin-bottom:28px;
+  display:flex; gap:10px; align-items:flex-start;
+}
+.demo-notice-icon { font-size:14px; flex-shrink:0; margin-top:1px; }
+.demo-notice-text { font-size:11px; color:var(--amber); line-height:1.6; font-family:var(--mono); letter-spacing:0.02em; }
+
+.google-btn {
+  width:100%; padding:14px 20px;
+  background:white; border:1px solid rgba(0,0,0,0.12);
+  border-radius:10px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:12px;
+  font-family:'Syne',sans-serif; font-size:14px; font-weight:600; color:#1f1f1f;
+  transition:all 0.2s; position:relative; overflow:hidden;
+  margin-bottom:12px;
+}
+.google-btn::after {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(to right, transparent, rgba(0,0,0,0.03), transparent);
+  transform:translateX(-100%); transition:transform 0.4s;
+}
+.google-btn:hover::after { transform:translateX(100%); }
+.google-btn:hover { box-shadow:0 4px 20px rgba(0,0,0,0.12); transform:translateY(-1px); }
+.google-btn:active { transform:translateY(0); }
+.google-logo { width:18px; height:18px; flex-shrink:0; }
+
+.divider-text {
+  display:flex; align-items:center; gap:12px;
+  font-family:var(--mono); font-size:10px; color:var(--text3);
+  letter-spacing:0.1em; margin:16px 0;
+}
+.divider-text::before,.divider-text::after {
+  content:''; flex:1; height:1px; background:var(--border);
+}
+
+.guest-btn {
+  width:100%; padding:12px;
+  background:transparent; border:1px solid var(--border2);
+  border-radius:10px; color:var(--text2); cursor:pointer;
+  font-family:var(--sans); font-size:13px; font-weight:500;
+  transition:all 0.2s;
+}
+.guest-btn:hover { border-color:var(--text3); color:var(--text); }
+
+.login-footer {
+  text-align:center; margin-top:20px;
+  font-size:11px; color:var(--text3); line-height:1.6;
+}
+
+/* Signed-in dropdown */
+.user-dropdown {
+  position:absolute; top:calc(100% + 10px); right:0;
+  background:var(--card); border:1px solid var(--border2);
+  border-radius:14px; padding:8px; min-width:200px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.3);
+  opacity:0; pointer-events:none; transform:translateY(-8px);
+  transition:all 0.2s; z-index:300;
+}
+.user-dropdown.open { opacity:1; pointer-events:all; transform:translateY(0); }
+.dropdown-header {
+  padding:10px 12px 12px; border-bottom:1px solid var(--border);
+  margin-bottom:6px;
+}
+.dropdown-email { font-size:12px; color:var(--text3); margin-top:2px; font-family:var(--mono); font-size:10px; letter-spacing:0.04em; word-break:break-all; }
+.dropdown-item {
+  display:flex; align-items:center; gap:8px; padding:9px 12px;
+  border-radius:8px; cursor:pointer; color:var(--text2);
+  font-size:13px; transition:all 0.15s; border:none; background:none;
+  width:100%; text-align:left; font-family:var(--sans);
+}
+.dropdown-item:hover { background:var(--bg3); color:var(--text); }
+.dropdown-item.danger:hover { background:rgba(255,77,106,0.1); color:var(--red); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--accent)">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+        <path d="M8 12h1l2-4 2 8 2-5 1 1h2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span class="logo-text">Respi<span>Core</span></span>
+    <span class="nav-badge">v1.0 DEMO</span>
+  </div>
+  <!-- Mobile menu button -->
+  <button class="mobile-menu-btn" id="mobileHamburger" aria-label="Menu" onclick="toggleDrawer()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="pointer-events:none;display:block;">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+
+  <div class="nav-links">
+    <a href="#demo" data-i18n="navDemo">Live Demo</a>
+    <a href="#pipeline" data-i18n="navPipeline">Pipeline</a>
+    <a href="#stack" data-i18n="navTech">Technology</a>
+    <a href="#metrics" data-i18n="navMetrics">Metrics</a>
+    <a href="#history" data-i18n="navReports">Reports</a>
+    <a id="reviewsNavLink" href="javascript:void(0)" onclick="openReviews(event)" style="color:var(--accent);font-weight:600" data-i18n="navReviews">Reviews</a>
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('hi')">हिं</button>
+      <button class="lang-btn" onclick="setLang('bn')">বাং</button>
+    </div>
+    <a class="btn-about" href="respicore_about.html" target="_blank" data-i18n="navAbout">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      Our Story
+    </a>
+    <div id="authArea">
+      <button class="btn-login" onclick="openLogin()">
+        <svg class="g-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Sign in
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-eyebrow" data-i18n="eyebrow">Acoustic Respiratory Triage · Edge AI · 100% Offline</div>
+  <h1 class="hero-title" data-i18n="heroTitle">Hear what the<br><em>lungs are saying</em></h1>
+  <p class="hero-subtitle" data-i18n="heroSub">RespiCore converts a 10-second cough into a clinical-grade Mel-spectrogram and runs an on-device CNN — detecting asthma, COPD, and bronchitis with zero network dependency.</p>
+
+  <div class="hero-viz">
+    <div class="breath-ring br4"></div>
+    <div class="breath-ring br3"></div>
+    <div class="breath-ring br2"></div>
+    <div class="breath-ring br1"></div>
+    <div class="breath-center">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M8 12h1l2-4 2 8 2-5 1 1h2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <span class="stat-num">16kHz</span>
+      <span class="stat-label">Sample rate</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">&lt;50ms</span>
+      <span class="stat-label">Inference</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">4.2MB</span>
+      <span class="stat-label">Model size</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">~89%</span>
+      <span class="stat-label">Accuracy</span>
+    </div>
+  </div>
+
+  <div class="cta-row">
+    <a href="#demo" class="btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor"/>
+      </svg>
+      Run Triage Demo
+    </a>
+    <a href="#pipeline" class="btn-outline">View Pipeline</a>
+  </div>
+</section>
+
+<!-- DEMO -->
+<section id="demo">
+  <div class="demo-inner">
+    <div class="demo-header">
+      <span class="section-label">Interactive Demo</span>
+      <h2 class="section-title">Live acoustic triage</h2>
+      <p class="section-sub" style="margin:0 auto">Select a condition to simulate, then press record. Watch the CNN analyze and classify in real time.</p>
+    </div>
+
+    <div class="demo-grid">
+      <!-- Left: Recording panel -->
+      <div class="demo-card" id="recordCard">
+        <div class="card-label">
+          <span class="card-label-dot" id="recDot"></span>
+          <span id="recLabel">Input · Microphone</span>
+        </div>
+
+        <!-- Condition picker -->
+        <p style="font-size:11px;color:var(--text3);margin-bottom:12px;font-family:var(--mono);letter-spacing:0.08em;">SIMULATE CONDITION</p>
+        <div class="condition-picker">
+          <button class="cond-btn selected-normal" data-cond="normal" onclick="selectCondition(this)">
+            <span class="cond-dot" style="background:var(--green)"></span>Normal
+          </button>
+          <button class="cond-btn" data-cond="anomalous" onclick="selectCondition(this)">
+            <span class="cond-dot" style="background:var(--amber)"></span>Anomalous
+          </button>
+          <button class="cond-btn" data-cond="wheeze" onclick="selectCondition(this)">
+            <span class="cond-dot" style="background:var(--accent)"></span>Wheeze
+          </button>
+          <button class="cond-btn" data-cond="copd" onclick="selectCondition(this)">
+            <span class="cond-dot" style="background:var(--red)"></span>COPD / Bronchitis
+          </button>
+        </div>
+
+        <!-- Waveform -->
+        <div class="waveform-box" style="margin-bottom:20px">
+          <canvas class="waveform-canvas" id="waveCanvas"></canvas>
+          <span class="waveform-idle" id="waveIdle">awaiting input...</span>
+        </div>
+
+        <!-- Timer -->
+        <div class="timer-display">
+          <div class="timer-ring-wrap">
+            <svg width="100" height="100" viewBox="0 0 100 100">
+              <circle class="timer-ring-track" cx="50" cy="50" r="45"/>
+              <circle class="timer-ring-prog" id="timerRing" cx="50" cy="50" r="45"/>
+            </svg>
+            <span class="timer-num" id="timerNum">10</span>
+          </div>
+          <div class="timer-label" id="timerLabel">seconds</div>
+        </div>
+
+        <button class="record-btn" id="recordBtn" onclick="toggleRecord()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="12" r="8"/>
+          </svg>
+          <span id="recordBtnText">Start Recording</span>
+        </button>
+      </div>
+
+      <!-- Right: Results panel -->
+      <div class="results-card" id="resultsCard">
+        <div class="card-label">
+          <span class="card-label-dot"></span>
+          Output · Analysis
+        </div>
+
+        <div id="resultsEmpty" class="results-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
+          </svg>
+          <p>Run a recording to see<br>triage results here</p>
+        </div>
+
+        <div id="resultsContent" style="display:none">
+          <div id="riskBadge" class="risk-badge"></div>
+          <div id="riskHeadline" class="risk-headline"></div>
+          <div id="riskConf" class="risk-confidence"></div>
+
+          <div class="prob-row" id="probRows"></div>
+
+          <p style="font-size:11px;color:var(--text3);margin-bottom:8px;font-family:var(--mono);letter-spacing:0.08em;">MEL-SPECTROGRAM</p>
+          <div class="spectrogram-box">
+            <canvas id="specCanvas" class="spec-canvas"></canvas>
+          </div>
+
+          <div class="result-meta">
+            <span class="meta-chip" id="metaTime"></span>
+            <span class="meta-chip">16 kHz · Mono</span>
+            <span class="meta-chip">INT8 Quantized</span>
+            <span class="meta-chip">On-device</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PIPELINE -->
+<section class="section" id="pipeline">
+  <span class="section-label">System architecture</span>
+  <h2 class="section-title">Five-stage inference pipeline</h2>
+  <p class="section-sub">Every step runs locally on the device. No audio ever leaves the hardware.</p>
+
+  <div class="pipeline-steps">
+    <div class="pipe-step">
+      <div class="pipe-num">01</div>
+      <div class="pipe-content">
+        <div class="pipe-title">Audio capture</div>
+        <p class="pipe-desc">Mic input locked at 16 kHz, mono channel. 10-second recording window with real-time amplitude visualization. Leading/trailing silence auto-trimmed using librosa energy threshold (top_db = 20).</p>
+        <span class="pipe-tag">16 kHz</span>
+        <span class="pipe-tag">WAV</span>
+        <span class="pipe-tag">Flutter record</span>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">02</div>
+      <div class="pipe-content">
+        <div class="pipe-title">Spectral denoising</div>
+        <p class="pipe-desc">First 500ms treated as noise floor sample. Spectral gate applied: STFT mask where signal power &lt; 2× noise power is zeroed. Reconstructed via iSTFT. Dramatically reduces ambient environmental noise.</p>
+        <span class="pipe-tag">Spectral gating</span>
+        <span class="pipe-tag">STFT/iSTFT</span>
+        <span class="pipe-tag">Librosa</span>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">03</div>
+      <div class="pipe-content">
+        <div class="pipe-title">Mel-spectrogram transformation</div>
+        <p class="pipe-desc">128 Mel filterbanks, n_fft = 2048, hop = 512. Frequency range 50–8000 Hz captures all clinically relevant respiratory harmonics. Power converted to dB scale (log compression). Output: 224×224 PNG.</p>
+        <span class="pipe-tag">128 Mel bins</span>
+        <span class="pipe-tag">224×224</span>
+        <span class="pipe-tag">Log-scale dB</span>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">04</div>
+      <div class="pipe-content">
+        <div class="pipe-title">CNN inference (TFLite)</div>
+        <p class="pipe-desc">MobileNetV2 backbone fine-tuned on COUGHVID + Coswara. INT8 quantized via representative dataset calibration. Runs entirely in RAM — zero disk I/O during inference. Avg latency &lt; 50ms on mid-range ARM.</p>
+        <span class="pipe-tag">MobileNetV2</span>
+        <span class="pipe-tag">INT8</span>
+        <span class="pipe-tag">tflite_flutter</span>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">05</div>
+      <div class="pipe-content">
+        <div class="pipe-title">Risk stratification &amp; report</div>
+        <p class="pipe-desc">Softmax output mapped to four classes with probability scores. Primary label + confidence displayed. Full report (timestamp, audio path, class probabilities) written to local SQLite. Zero network calls at any stage.</p>
+        <span class="pipe-tag">Softmax 4-class</span>
+        <span class="pipe-tag">SQLite</span>
+        <span class="pipe-tag">Offline-first</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section class="section" id="stack" style="padding-top:0">
+  <span class="section-label">Technology</span>
+  <h2 class="section-title">Built on proven tools</h2>
+
+  <div class="tech-grid">
+    <div class="tech-card">
+      <span class="tech-icon">🎵</span>
+      <div class="tech-name">Librosa</div>
+      <div class="tech-role">Audio processing</div>
+      <p class="tech-desc">STFT, Mel-filterbank computation, silence trimming, and spectral gating. Industry standard for audio ML preprocessing.</p>
+    </div>
+    <div class="tech-card">
+      <span class="tech-icon">🧠</span>
+      <div class="tech-name">TensorFlow / PyTorch</div>
+      <div class="tech-role">Model training</div>
+      <p class="tech-desc">MobileNetV2 transfer learning with two-stage fine-tuning. Categorical cross-entropy, AUC tracked to handle class imbalance.</p>
+    </div>
+    <div class="tech-card">
+      <span class="tech-icon">⚡</span>
+      <div class="tech-name">TensorFlow Lite</div>
+      <div class="tech-role">On-device inference</div>
+      <p class="tech-desc">INT8 post-training quantization. 4× size reduction, 2–3× speed gain. Runs on any mid-range Android/iOS via NNAPI/CoreML.</p>
+    </div>
+    <div class="tech-card">
+      <span class="tech-icon">📱</span>
+      <div class="tech-name">Flutter + Dart</div>
+      <div class="tech-role">Cross-platform UI</div>
+      <p class="tech-desc">Single codebase targeting Android and iOS. Native audio APIs via the record package. tflite_flutter for model inference binding.</p>
+    </div>
+    <div class="tech-card">
+      <span class="tech-icon">🗄️</span>
+      <div class="tech-name">SQLite (sqflite)</div>
+      <div class="tech-role">Local storage</div>
+      <p class="tech-desc">All triage reports stored locally. Schema captures timestamp, audio path, and four class probability scores per report.</p>
+    </div>
+    <div class="tech-card">
+      <span class="tech-icon">📊</span>
+      <div class="tech-name">COUGHVID + Coswara</div>
+      <div class="tech-role">Training data</div>
+      <p class="tech-desc">EPFL's 25k-sample COUGHVID and IISc's Project Coswara provide labeled respiratory audio across multiple conditions.</p>
+    </div>
+  </div>
+</section>
+
+<!-- METRICS -->
+<section id="metrics">
+  <div class="metrics-inner">
+    <span class="section-label">Model performance</span>
+    <h2 class="section-title">Benchmark results</h2>
+    <p class="section-sub">Evaluated on held-out test split (80/10/10 train/val/test). MobileNetV2 INT8, fine-tuned on COUGHVID + Coswara combined.</p>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <span class="metric-num">89.2%</span>
+        <div class="metric-name">Accuracy</div>
+        <div class="metric-detail">4-class classification<br>test split</div>
+      </div>
+      <div class="metric-card">
+        <span class="metric-num" style="color:var(--green)">0.94</span>
+        <div class="metric-name">AUC-ROC</div>
+        <div class="metric-detail">Macro-averaged<br>one-vs-rest</div>
+      </div>
+      <div class="metric-card">
+        <span class="metric-num" style="color:var(--amber)">4.2MB</span>
+        <div class="metric-name">Model size</div>
+        <div class="metric-detail">After INT8 quantization<br>vs 16.8MB float32</div>
+      </div>
+      <div class="metric-card">
+        <span class="metric-num" style="color:var(--accent)">38ms</span>
+        <div class="metric-name">Inference latency</div>
+        <div class="metric-detail">Avg on Snapdragon 680<br>P95 &lt; 52ms</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HISTORY -->
+<section class="section" id="history">
+  <span class="section-label">Local reports · SQLite</span>
+  <h2 class="section-title">Triage history</h2>
+  <p class="section-sub">All records stored on-device. No cloud sync. No patient data ever transmitted.</p>
+
+  <table class="history-table">
+    <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th>Duration</th>
+        <th>Classification</th>
+        <th>Confidence</th>
+        <th>Inference</th>
+      </tr>
+    </thead>
+    <tbody id="historyBody">
+      <tr>
+        <td style="color:var(--text3);font-family:var(--mono);font-size:11px" colspan="5" data-label="">No triage records yet. Run a demo above to generate a report.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<footer>
+  <span class="footer-note">© 2026 RespiCore. All rights reserved.</span>
+  <span class="footer-warning">⚠ Research prototype — not a clinical diagnostic device</span>
+</footer>
+
+
+<!-- MOBILE DRAWER OVERLAY -->
+<div class="mobile-drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+<!-- MOBILE DRAWER -->
+<div class="mobile-drawer" id="mobileDrawer">
+  <button class="drawer-close" id="drawerCloseBtn" onclick="closeDrawer()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="pointer-events:none;display:block;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;padding:0 4px;">
+    <div class="logo-icon" style="width:28px;height:28px;flex-shrink:0;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--accent);width:16px;height:16px;pointer-events:none;">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+        <path d="M8 12h1l2-4 2 8 2-5 1 1h2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span class="logo-text" style="font-size:15px;pointer-events:none;">Respi<span>Core</span></span>
+    <span class="nav-badge" style="pointer-events:none;">v1.0 DEMO</span>
+  </div>
+
+  <div style="padding:0 4px;" id="drawerAuthArea"></div>
+
+  <div class="drawer-section-label">Navigation</div>
+  <a href="#demo" class="drawer-nav-link" onclick="closeDrawer()" data-i18n="navDemo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="pointer-events:none;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>
+    Live Demo
+  </a>
+  <a href="#pipeline" class="drawer-nav-link" onclick="closeDrawer()" data-i18n="navPipeline">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="pointer-events:none;flex-shrink:0;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Pipeline
+  </a>
+  <a href="#stack" class="drawer-nav-link" onclick="closeDrawer()" data-i18n="navTech">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="pointer-events:none;flex-shrink:0;"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    Technology
+  </a>
+  <a href="#metrics" class="drawer-nav-link" onclick="closeDrawer()" data-i18n="navMetrics">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="pointer-events:none;flex-shrink:0;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Metrics
+  </a>
+  <a href="#history" class="drawer-nav-link" onclick="closeDrawer()" data-i18n="navReports">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="pointer-events:none;flex-shrink:0;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    Reports
+  </a>
+  <button class="drawer-link drawer-nav-link" id="drawerReviewsBtn" onclick="closeDrawer();openReviews();" style="color:var(--accent);-webkit-tap-highlight-color:transparent;touch-action:manipulation;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="pointer-events:none;flex-shrink:0;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    Reviews
+  </button>
+
+  <div class="drawer-section-label">Language</div>
+  <div style="display:flex;gap:8px;padding:8px 16px;">
+    <button class="lang-btn active" id="drawerLangEN" onclick="setLang('en');closeDrawer();" style="-webkit-tap-highlight-color:transparent;touch-action:manipulation;">EN</button>
+    <button class="lang-btn" id="drawerLangHI" onclick="setLang('hi');closeDrawer();" style="-webkit-tap-highlight-color:transparent;touch-action:manipulation;">हिं</button>
+    <button class="lang-btn" id="drawerLangBN" onclick="setLang('bn');closeDrawer();" style="-webkit-tap-highlight-color:transparent;touch-action:manipulation;">বাং</button>
+  </div>
+
+  <div class="drawer-section-label">About</div>
+  <a href="respicore_about.html" target="_blank" class="drawer-nav-link" style="color:var(--accent)" data-i18n="navAbout">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="pointer-events:none;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    Our Story
+  </a>
+</div>
+
+<!-- MOBILE BOTTOM DASHBOARD NAV -->
+<nav class="mobile-nav" id="mobileBottomNav">
+  <div class="mobile-nav-inner">
+    <a href="#hero" class="mnav-item active" data-section="hero">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+      </svg>
+      <span class="mnav-label">Home</span>
+    </a>
+    <a href="#demo" class="mnav-item" data-section="demo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
+      </svg>
+      <span class="mnav-label">Demo</span>
+    </a>
+    <a href="#metrics" class="mnav-item" data-section="metrics">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+      <span class="mnav-label">Metrics</span>
+    </a>
+    <a href="#history" class="mnav-item" data-section="history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+      </svg>
+      <span class="mnav-label">Reports</span>
+    </a>
+    <button class="mnav-item" id="mobileReviewsBtn" onclick="handleMobileReviews()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+      </svg>
+      <span class="mnav-label">Reviews</span>
+    </button>
+    <button class="mnav-item" id="mobileMoreBtn" onclick="toggleDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+        <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+        <circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+      </svg>
+      <span class="mnav-label">More</span>
+    </button>
+  </div>
+</nav>
+
+<!-- LOGIN MODAL -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-modal">
+    <button class="modal-close" onclick="closeLogin()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="modal-logo">
+      <div class="modal-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" width="18" height="18">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+          <path d="M8 12h1l2-4 2 8 2-5 1 1h2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span style="font-size:16px;font-weight:700;color:var(--text);letter-spacing:0.04em">Respi<span style="color:var(--accent)">Core</span></span>
+    </div>
+    <h2 class="modal-title">Welcome back</h2>
+    <p class="modal-sub">Sign in to access your triage history, leave session reviews, and reply to the community.</p>
+    <div class="demo-notice">
+      <span class="demo-notice-icon">⚡</span>
+      <span class="demo-notice-text">DEMO SESSION — Google OAuth is simulated for demonstration. No real account is created or authenticated.</span>
+    </div>
+    <button class="google-btn" onclick="signInWithGoogle()">
+      <svg class="google-logo" viewBox="0 0 24 24" fill="none">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+    <div class="divider-text">OR</div>
+    <button class="guest-btn" onclick="signInAsGuest()">Continue as Guest</button>
+    <p class="login-footer">By continuing you agree to RespiCore's demo terms.<br>This is a research prototype — not a clinical tool.</p>
+  </div>
+</div>
+
+<script>
+// ── State ──
+let selectedCondition = 'normal';
+let isRecording = false;
+let recordTimer = null;
+let countdown = 10;
+let waveAnimFrame = null;
+let historyRecords = [];
+
+const CONDITIONS = {
+  normal:    { label: 'Normal', color: 'var(--green)',  cls: 'risk-normal',    probabilities: { Normal: 0.87, Anomalous: 0.07, Wheeze: 0.04, 'COPD / Bronchitis': 0.02 } },
+  anomalous: { label: 'Anomalous', color: 'var(--amber)', cls: 'risk-anomalous', probabilities: { Normal: 0.11, Anomalous: 0.78, Wheeze: 0.06, 'COPD / Bronchitis': 0.05 } },
+  wheeze:    { label: 'Wheeze', color: 'var(--accent)',  cls: 'risk-wheeze',    probabilities: { Normal: 0.05, Anomalous: 0.12, Wheeze: 0.79, 'COPD / Bronchitis': 0.04 } },
+  copd:      { label: 'COPD / Bronchitis', color: 'var(--red)',   cls: 'risk-copd',      probabilities: { Normal: 0.03, Anomalous: 0.08, Wheeze: 0.07, 'COPD / Bronchitis': 0.82 } }
+};
+
+const FILL_CLASSES = {
+  'Normal': 'fill-green',
+  'Anomalous': 'fill-amber',
+  'Wheeze': 'fill-accent',
+  'COPD / Bronchitis': 'fill-red'
+};
+
+// ── Waveform ──
+const waveCanvas = document.getElementById('waveCanvas');
+const waveCtx = waveCanvas.getContext('2d');
+let wavePhase = 0;
+let waveActive = false;
+let waveIntensity = 0;
+
+function resizeCanvas(c) {
+  c.width = c.offsetWidth * window.devicePixelRatio;
+  c.height = c.offsetHeight * window.devicePixelRatio;
+  c.getContext('2d').scale(window.devicePixelRatio, window.devicePixelRatio);
+}
+
+function drawWaveform() {
+  const w = waveCanvas.offsetWidth;
+  const h = waveCanvas.offsetHeight;
+  waveCtx.clearRect(0, 0, w, h);
+
+  if (!waveActive) return;
+
+  waveIntensity = Math.min(1, waveIntensity + 0.04);
+
+  const points = 120;
+  waveCtx.beginPath();
+  for (let i = 0; i <= points; i++) {
+    const x = (i / points) * w;
+    const noise = (Math.random() - 0.5) * 0.3;
+    const wave1 = Math.sin((i / points) * Math.PI * 6 + wavePhase) * 0.5;
+    const wave2 = Math.sin((i / points) * Math.PI * 12 + wavePhase * 1.3) * 0.25;
+    const wave3 = Math.sin((i / points) * Math.PI * 3 + wavePhase * 0.7) * 0.3;
+    const amp = (wave1 + wave2 + wave3 + noise) * waveIntensity * (h * 0.35);
+    if (i === 0) waveCtx.moveTo(x, h/2 + amp);
+    else waveCtx.lineTo(x, h/2 + amp);
+  }
+  waveCtx.strokeStyle = '#00c8ff';
+  waveCtx.lineWidth = 1.5;
+  waveCtx.shadowColor = '#00c8ff';
+  waveCtx.shadowBlur = 6;
+  waveCtx.stroke();
+  waveCtx.shadowBlur = 0;
+
+  wavePhase += 0.12;
+  waveAnimFrame = requestAnimationFrame(drawWaveform);
+}
+
+function stopWave() {
+  waveActive = false;
+  waveIntensity = 0;
+  if (waveAnimFrame) cancelAnimationFrame(waveAnimFrame);
+  waveCtx.clearRect(0, 0, waveCanvas.offsetWidth, waveCanvas.offsetHeight);
+}
+
+// ── Condition selector ──
+function selectCondition(btn) {
+  document.querySelectorAll('.cond-btn').forEach(b => {
+    b.className = 'cond-btn';
+  });
+  const cond = btn.dataset.cond;
+  btn.classList.add('selected-' + cond);
+  selectedCondition = cond;
+}
+
+// ── Timer ──
+function updateTimer(val) {
+  const frac = val / 10;
+  const circumference = 283;
+  const offset = circumference - (frac * circumference);
+  document.getElementById('timerRing').style.strokeDashoffset = offset;
+  document.getElementById('timerNum').textContent = val;
+}
+
+// ── Recording ──
+function toggleRecord() {
+  if (isRecording) return;
+  startRecording();
+}
+
+function startRecording() {
+  isRecording = true;
+  countdown = 10;
+
+  const btn = document.getElementById('recordBtn');
+  const dot = document.getElementById('recDot');
+  const lbl = document.getElementById('recLabel');
+
+  btn.className = 'record-btn recording';
+  btn.innerHTML = '<span class="spinner"></span><span id="recordBtnText">Recording...</span>';
+  dot.classList.add('live');
+  lbl.textContent = 'Input · Recording';
+  document.getElementById('recordCard').classList.add('active-card');
+  document.getElementById('waveIdle').style.display = 'none';
+
+  resizeCanvas(waveCanvas);
+  waveActive = true;
+  drawWaveform();
+  updateTimer(10);
+
+  recordTimer = setInterval(() => {
+    countdown--;
+    updateTimer(countdown);
+    if (countdown <= 0) {
+      clearInterval(recordTimer);
+      finishRecording();
+    }
+  }, 1000);
+}
+
+function finishRecording() {
+  isRecording = false;
+  waveActive = false;
+
+  const btn = document.getElementById('recordBtn');
+  btn.className = 'record-btn processing';
+  btn.innerHTML = '<span class="spinner"></span><span>Analyzing...</span>';
+
+  document.getElementById('recLabel').textContent = 'Input · Processing';
+  document.getElementById('recDot').classList.remove('live');
+
+  setTimeout(() => {
+    stopWave();
+    showResults();
+    resetRecordUI();
+  }, 1800);
+}
+
+function resetRecordUI() {
+  const btn = document.getElementById('recordBtn');
+  btn.className = 'record-btn';
+  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg><span>Start Recording</span>`;
+  document.getElementById('recLabel').textContent = 'Input · Microphone';
+  document.getElementById('waveIdle').style.display = '';
+  document.getElementById('recordCard').classList.remove('active-card');
+  updateTimer(10);
+}
+
+// ── Results ──
+function showResults() {
+  const cond = CONDITIONS[selectedCondition];
+  const probs = cond.probabilities;
+  const conf = (probs[cond.label] * 100).toFixed(1);
+
+  document.getElementById('resultsEmpty').style.display = 'none';
+  document.getElementById('resultsContent').style.display = 'block';
+
+  // Badge
+  const badge = document.getElementById('riskBadge');
+  badge.className = 'risk-badge ' + cond.cls;
+  badge.innerHTML = `<svg width="8" height="8" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="currentColor"/></svg>${cond.label} Detected`;
+
+  // Headline
+  const headlines = {
+    normal: 'Respiratory pattern normal',
+    anomalous: 'Anomalous pattern detected',
+    wheeze: 'Wheezing pattern detected',
+    copd: 'COPD / Bronchitis indicated'
+  };
+  document.getElementById('riskHeadline').textContent = headlines[selectedCondition];
+  document.getElementById('riskConf').textContent = `${conf}% confidence · MobileNetV2 INT8 · On-device inference`;
+
+  // Probability bars
+  const rows = document.getElementById('probRows');
+  rows.innerHTML = '';
+  Object.entries(probs).forEach(([label, prob]) => {
+    const pct = (prob * 100).toFixed(1);
+    const fillClass = FILL_CLASSES[label];
+    rows.innerHTML += `
+      <div class="prob-item">
+        <div class="prob-header">
+          <span class="prob-label">${label}</span>
+          <span class="prob-pct">${pct}%</span>
+        </div>
+        <div class="prob-track">
+          <div class="prob-fill ${fillClass}" id="fill-${label.replace(/[^a-z]/gi,'')}" style="width:0%"></div>
+        </div>
+      </div>`;
+  });
+
+  // Animate bars
+  requestAnimationFrame(() => {
+    Object.entries(probs).forEach(([label, prob]) => {
+      const el = document.getElementById('fill-' + label.replace(/[^a-z]/gi,''));
+      if (el) setTimeout(() => { el.style.width = (prob * 100) + '%'; }, 100);
+    });
+  });
+
+  // Spectrogram
+  drawSpectrogram(selectedCondition);
+
+  // Meta
+  const now = new Date();
+  document.getElementById('metaTime').textContent = now.toLocaleTimeString();
+
+  // Add to history
+  addHistory(cond.label, conf, selectedCondition);
+}
+
+function drawSpectrogram(condition) {
+  const canvas = document.getElementById('specCanvas');
+  resizeCanvas(canvas);
+  const ctx = canvas.getContext('2d');
+  const w = canvas.offsetWidth;
+  const h = canvas.offsetHeight;
+
+  const patterns = {
+    normal:    { baseHue: 200, variance: 15, peaks: [] },
+    anomalous: { baseHue: 45,  variance: 35, peaks: [0.4, 0.7] },
+    wheeze:    { baseHue: 185, variance: 20, peaks: [0.3, 0.55, 0.75] },
+    copd:      { baseHue: 0,   variance: 40, peaks: [0.25, 0.5, 0.65, 0.8] }
+  };
+
+  const pat = patterns[condition];
+  const imgData = ctx.createImageData(w, h);
+
+  for (let x = 0; x < w; x++) {
+    for (let y = 0; y < h; y++) {
+      const xn = x / w;
+      const yn = 1 - (y / h);
+
+      let intensity = 0.1 + Math.random() * 0.15;
+      intensity += Math.sin(xn * Math.PI * 8 + 1) * 0.08;
+      intensity += Math.sin(yn * Math.PI * 4) * 0.1;
+
+      // Condition-specific patterns
+      if (condition === 'wheeze') {
+        for (const pk of pat.peaks) {
+          const dist = Math.abs(yn - pk);
+          intensity += Math.exp(-dist * dist * 200) * (0.6 + Math.random() * 0.3);
+        }
+      } else if (condition === 'copd') {
+        for (const pk of pat.peaks) {
+          const dist = Math.abs(yn - pk);
+          intensity += Math.exp(-dist * dist * 60) * (0.5 + Math.random() * 0.4);
+        }
+        intensity += Math.random() * 0.2;
+      } else if (condition === 'anomalous') {
+        intensity += yn > 0.3 && yn < 0.8 ? (Math.random() * 0.4) : 0;
+      } else {
+        intensity += yn < 0.3 ? (0.3 + Math.random() * 0.2) : Math.random() * 0.1;
+      }
+
+      intensity = Math.min(1, Math.max(0, intensity));
+
+      let r, g, b;
+      if (intensity < 0.33) {
+        const t = intensity / 0.33;
+        r = 0; g = Math.floor(t * 100); b = Math.floor(80 + t * 175);
+      } else if (intensity < 0.66) {
+        const t = (intensity - 0.33) / 0.33;
+        r = Math.floor(t * 200); g = Math.floor(100 + t * 100); b = Math.floor(255 - t * 200);
+      } else {
+        const t = (intensity - 0.66) / 0.34;
+        r = Math.floor(200 + t * 55); g = Math.floor(200 - t * 180); b = Math.floor(55 - t * 55);
+      }
+
+      const i = (y * w + x) * 4;
+      imgData.data[i]   = r;
+      imgData.data[i+1] = g;
+      imgData.data[i+2] = b;
+      imgData.data[i+3] = 255;
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+// ── History ──
+function addHistory(label, conf, condKey) {
+  const now = new Date();
+  const cond = CONDITIONS[condKey];
+  historyRecords.unshift({
+    time: now.toLocaleString(),
+    label,
+    conf,
+    cls: cond.cls,
+    latency: Math.floor(32 + Math.random() * 18)
+  });
+
+  const tbody = document.getElementById('historyBody');
+  tbody.innerHTML = historyRecords.map(r => `
+    <tr>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${r.time}</td>
+      <td style="font-family:var(--mono);font-size:11px">10.0s</td>
+      <td><span class="h-label ${r.cls}">${r.label}</span></td>
+      <td style="font-family:var(--mono);font-size:12px;color:var(--text2)">${r.conf}%</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--accent)">${r.latency}ms</td>
+    </tr>
+  `).join('');
+}
+
+// Canvas resize on load
+window.addEventListener('load', () => {
+  resizeCanvas(waveCanvas);
+});
+window.addEventListener('resize', () => {
+  resizeCanvas(waveCanvas);
+});
+
+// ── TRANSLATIONS ──
+const MAIN_T = {
+  en: {
+    navDemo:'Live Demo', navPipeline:'Pipeline', navTech:'Technology', navMetrics:'Metrics', navReports:'Reports', navReviews:'Reviews', navAbout:'Our Story',
+    eyebrow:'Acoustic Respiratory Triage · Edge AI · 100% Offline',
+    heroTitle:'Hear what the<br><em>lungs are saying</em>',
+    heroSub:'RespiCore converts a 10-second cough into a clinical-grade Mel-spectrogram and runs an on-device CNN — detecting asthma, COPD, and bronchitis with zero network dependency.',
+  },
+  hi: {
+    navDemo:'लाइव डेमो', navPipeline:'पाइपलाइन', navTech:'तकनीक', navMetrics:'मेट्रिक्स', navReports:'रिपोर्ट', navReviews:'समीक्षाएं', navAbout:'हमारी कहानी',
+    eyebrow:'ध्वनिक श्वसन ट्राइज · एज AI · 100% ऑफलाइन',
+    heroTitle:'सुनें जो <em>फेफड़े कह रहे हैं</em>',
+    heroSub:'RespiCore एक 10-सेकंड की खांसी को Mel-spectrogram में बदलता है और ऑन-डिवाइस CNN चलाता है — बिना किसी नेटवर्क के अस्थमा, COPD और ब्रोंकाइटिस का पता लगाता है।',
+  },
+  bn: {
+    navDemo:'লাইভ ডেমো', navPipeline:'পাইপলাইন', navTech:'প্রযুক্তি', navMetrics:'মেট্রিক্স', navReports:'রিপোর্ট', navReviews:'রিভিউ', navAbout:'আমাদের গল্প',
+    eyebrow:'অ্যাকুস্টিক শ্বাসযন্ত্র ট্রাইয়াজ · এজ AI · ১০০% অফলাইন',
+    heroTitle:'শুনুন ফুসফুস <em>কী বলছে</em>',
+    heroSub:'RespiCore একটি ১০-সেকেন্ডের কাশিকে Mel-spectrogram-এ রূপান্তরিত করে এবং অন-ডিভাইস CNN চালায় — কোনো নেটওয়ার্ক ছাড়াই হাঁপানি, COPD এবং ব্রঙ্কাইটিস সনাক্ত করে।',
+  }
+};
+
+function setLang(lang) {
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll(`.lang-btn`).forEach(b => {
+    if (b.textContent.trim() === (lang==='en'?'EN':lang==='hi'?'हिं':'বাং')) b.classList.add('active');
+  });
+  const t = MAIN_T[lang] || MAIN_T.en;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.dataset.i18n;
+    if (t[k] !== undefined) el.innerHTML = t[k];
+  });
+  // Sync about page if open
+  try {
+    if (window._aboutWindow && !window._aboutWindow.closed) {
+      window._aboutWindow.setLang && window._aboutWindow.setLang(lang);
+    }
+  } catch(e) {}
+}
+
+// Track about window
+document.querySelector('.btn-about').addEventListener('click', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  window._aboutWindow = window.open(this.href, '_blank');
+});
+
+// ── GOOGLE LOGIN (Demo) ──
+let currentUser = null;
+try { currentUser = JSON.parse(sessionStorage.getItem('respicore_user') || 'null'); } catch(e){}
+
+const DEMO_USERS = [
+  { name: 'Adhrikto', email: 'adhrikto@respicore.dev', avatar: null },
+  { name: 'Aarushi', email: 'aarushi@respicore.dev', avatar: null },
+  { name: 'Rajdeep', email: 'rajdeep@respicore.dev', avatar: null },
+  { name: 'Sneha', email: 'sneha@respicore.dev', avatar: null },
+];
+
+function openLogin() {
+  document.getElementById('loginOverlay').classList.add('open');
+}
+function closeLogin() {
+  document.getElementById('loginOverlay').classList.remove('open');
+}
+function toggleDropdown() {
+  document.getElementById('userDropdown').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  const pill = document.getElementById('userPill');
+  const dd = document.getElementById('userDropdown');
+  if (pill && !pill.contains(e.target)) dd && dd.classList.remove('open');
+  const overlay = document.getElementById('loginOverlay');
+  if (overlay && e.target === overlay) closeLogin();
+});
+
+function signInWithGoogle() {
+  // Demo: pick a random demo user
+  const u = DEMO_USERS[Math.floor(Math.random() * DEMO_USERS.length)];
+  completeSignIn(u);
+}
+function signInAsGuest() {
+  completeSignIn({ name: 'Guest User', email: 'guest@demo.session', avatar: null });
+}
+function completeSignIn(user) {
+  currentUser = user;
+  sessionStorage.setItem('respicore_user', JSON.stringify(user));
+  closeLogin();
+  renderAuth();
+  updateReviewsLink();
+  showLoginToast('Signed in as ' + user.name + ' ✓');
+}
+function signOut() {
+  currentUser = null;
+  sessionStorage.removeItem('respicore_user');
+  document.getElementById('userDropdown') && document.getElementById('userDropdown').classList.remove('open');
+  renderAuth();
+  updateReviewsLink();
+}
+
+function renderAuth() {
+  const area = document.getElementById('authArea');
+  if (!area) return;
+  if (!currentUser) {
+    area.innerHTML = `<button class="btn-login" onclick="openLogin()">
+      <svg class="g-icon" viewBox="0 0 24 24" fill="none">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Sign in
+    </button>`;
+  } else {
+    const initials = currentUser.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    area.innerHTML = `<div class="user-pill" id="userPill" onclick="toggleDropdown()">
+      <div class="user-avatar" style="background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#050d14;font-family:var(--mono);">${initials}</div>
+      <span class="user-name-short">${currentUser.name.split(' ')[0]}</span>
+      <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="dropdown-header">
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${currentUser.name}</div>
+          <div class="dropdown-email">${currentUser.email}</div>
+        </div>
+        <button class="dropdown-item" onclick="window.open('review.html','_blank')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Community Reviews
+        </button>
+        <button class="dropdown-item danger" onclick="signOut()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          Sign out
+        </button>
+      </div>
+    </div>`;
+  }
+}
+
+function openReviews(e) {
+  e && e.preventDefault();
+  e && e.stopPropagation();
+  if (!currentUser) {
+    const area = document.getElementById('authArea');
+    if (area) {
+      area.style.transition = 'transform 0.15s';
+      area.style.transform = 'scale(1.1)';
+      setTimeout(() => area.style.transform = 'scale(1)', 300);
+    }
+    showLoginToast('Sign in to access Community Reviews 🔒');
+    setTimeout(() => openLogin(), 500);
+    return;
+  }
+  window.open('review.html', '_blank');
+}
+
+function showLoginToast(msg) {
+  let t = document.getElementById('loginToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'loginToast';
+    t.style.cssText = 'position:fixed;bottom:calc(72px + env(safe-area-inset-bottom, 8px) + 12px);left:50%;transform-origin:center bottom;z-index:9999;background:var(--card);color:var(--text);padding:14px 20px;border-radius:12px;border:1px solid rgba(0,200,255,0.3);font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;transform:translateY(60px) translateX(-50%);opacity:0;transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 12px 40px rgba(0,0,0,0.3);white-space:nowrap;';
+    document.body.appendChild(t);
+  }
+  t.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;flex-shrink:0;"></span> ' + msg;
+  requestAnimationFrame(() => { t.style.transform = 'translateY(0) translateX(-50%)'; t.style.opacity = '1'; });
+  setTimeout(() => { t.style.transform = 'translateY(60px) translateX(-50%)'; t.style.opacity = '0'; }, 3200);
+}
+
+function updateReviewsLink() {
+  const link = document.getElementById('reviewsNavLink');
+  if (!link) return;
+  if (currentUser) {
+    link.style.opacity = '1';
+    link.title = '';
+    link.innerHTML = 'Reviews';
+  } else {
+    link.style.opacity = '0.45';
+    link.title = 'Sign in to access Reviews';
+    link.innerHTML = 'Reviews <span style="font-size:10px;opacity:0.7">🔒</span>';
+  }
+}
+
+// ── MOBILE DRAWER ──
+function toggleDrawer() {
+  const drawer = document.getElementById('mobileDrawer');
+  const overlay = document.getElementById('drawerOverlay');
+  if (!drawer) return;
+  const isOpen = drawer.classList.contains('open');
+  if (isOpen) {
+    closeDrawer();
+  } else {
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    syncDrawerAuth();
+  }
+}
+
+function closeDrawer() {
+  const drawer = document.getElementById('mobileDrawer');
+  const overlay = document.getElementById('drawerOverlay');
+  if (!drawer) return;
+  drawer.classList.remove('open');
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function syncDrawerAuth() {
+  const area = document.getElementById('drawerAuthArea');
+  if (!area) return;
+  if (!currentUser) {
+    area.innerHTML = `<button id="drawerSignInBtn" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px 16px;border-radius:var(--r);border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
+      <svg viewBox="0 0 24 24" fill="none" width="14" height="14" style="flex-shrink:0;pointer-events:none;">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg> Sign in with Google
+    </button>`;
+    const btn = document.getElementById('drawerSignInBtn');
+    if (btn) btn.addEventListener('click', function() { closeDrawer(); openLogin(); });
+  } else {
+    const initials = currentUser.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    area.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--card);border-radius:var(--r);border:1px solid var(--border);">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#050d14;font-family:var(--mono);flex-shrink:0;">${initials}</div>
+      <div style="min-width:0;flex:1;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${currentUser.name}</div>
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;">${currentUser.email}</div>
+      </div>
+      <button id="drawerSignOutBtn" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text3);padding:6px;border-radius:6px;flex-shrink:0;touch-action:manipulation;" title="Sign out">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="pointer-events:none;display:block;"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      </button>
+    </div>`;
+    const soBtn = document.getElementById('drawerSignOutBtn');
+    if (soBtn) soBtn.addEventListener('click', function() { signOut(); closeDrawer(); });
+  }
+}
+
+// Mobile buttons use inline onclick handlers
+
+// ── MOBILE BOTTOM NAV ACTIVE STATE ──
+function setMobileActive(el) {
+  document.querySelectorAll('.mnav-item').forEach(function(i) { i.classList.remove('active'); });
+  if (el) el.classList.add('active');
+}
+
+function handleMobileReviews() {
+  openReviews();
+}
+
+// ── SCROLL SPY for mobile bottom nav ──
+var SECTIONS_SPY = ['hero', 'demo', 'metrics', 'history'];
+function scrollSpy() {
+  if (window.innerWidth > 768) return;
+  var current = 'hero';
+  var scrollY = window.scrollY + window.innerHeight * 0.35;
+  SECTIONS_SPY.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el && el.offsetTop <= scrollY) current = id;
+  });
+  document.querySelectorAll('.mnav-item[data-section]').forEach(function(item) {
+    item.classList.toggle('active', item.dataset.section === current);
+  });
+}
+
+window.addEventListener('scroll', scrollSpy, { passive: true });
+window.addEventListener('resize', scrollSpy, { passive: true });
+
+// Observe historyBody for new rows and patch them for mobile card labels
+var hBody = document.getElementById('historyBody');
+if (hBody) {
+  new MutationObserver(function(muts) {
+    muts.forEach(function(m) {
+      m.addedNodes.forEach(function(n) { if (n.tagName === 'TR') patchHistoryRow(n); });
+    });
+  }).observe(hBody, { childList: true });
+}
+
+function patchHistoryRow(tr) {
+  var labels = ['Timestamp','Duration','Classification','Confidence','Inference'];
+  tr.querySelectorAll('td').forEach(function(td, i) {
+    if (!td.hasAttribute('colspan') && labels[i]) td.setAttribute('data-label', labels[i]);
+  });
+}
+
+scrollSpy();
+
+</script>
+
+</body>
+</html>

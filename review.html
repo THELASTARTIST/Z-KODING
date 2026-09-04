@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RespiCore — Voices</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #07080a;
+  --paper: #f5f2ec;
+  --paper2: #ece8df;
+  --paper3: #e4dfd3;
+  --accent: #00c8ff;
+  --accent2: #0090d4;
+  --deep: #050d14;
+  --deep2: #0a1520;
+  --gold: #c9a84c;
+  --rust: #c45c3a;
+  --sage: #4a7c59;
+  --text: #1a1c20;
+  --text2: #4a4a52;
+  --text3: #8a8a96;
+  --border: rgba(26,28,32,0.1);
+  --border2: rgba(26,28,32,0.2);
+  --serif: 'Instrument Serif', serif;
+  --sans: 'Space Grotesk', sans-serif;
+  --mono: 'Space Mono', monospace;
+  --r: 4px;
+  --r2: 12px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  background: var(--paper);
+  color: var(--text);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ── Noise texture overlay ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--border2);
+}
+.nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
+.logo-mark {
+  width: 28px; height: 28px; border: 1.5px solid var(--text);
+  border-radius: 6px; display: flex; align-items: center; justify-content: center;
+}
+.logo-mark svg { color: var(--accent); }
+.logo-name { font-size: 15px; font-weight: 700; letter-spacing: 0.03em; }
+.logo-name span { color: var(--accent2); }
+.nav-center {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.25em;
+  color: var(--text3); text-transform: uppercase;
+}
+.btn-back {
+  font-family: var(--sans); font-size: 12px; font-weight: 600;
+  color: var(--text2); text-decoration: none;
+  border: 1px solid var(--border2); padding: 7px 16px;
+  border-radius: var(--r); transition: all 0.2s;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-back:hover { border-color: var(--text); color: var(--text); }
+
+/* ── HERO BANNER ── */
+.hero-banner {
+  position: relative; z-index: 1;
+  padding: 120px 40px 80px;
+  background: var(--deep);
+  overflow: hidden;
+}
+.hero-banner::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 30% 60%, rgba(0,200,255,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 20%, rgba(201,168,76,0.06) 0%, transparent 50%);
+}
+.banner-grid {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 360px; gap: 60px;
+  align-items: end; position: relative; z-index: 1;
+}
+.banner-chip {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em;
+  color: var(--accent); text-transform: uppercase;
+  border: 1px solid rgba(0,200,255,0.3); padding: 5px 14px;
+  border-radius: 100px; display: inline-block; margin-bottom: 24px;
+}
+.banner-title {
+  font-family: var(--serif);
+  font-size: clamp(44px, 6vw, 80px);
+  line-height: 1.0;
+  color: #f5f2ec;
+  margin-bottom: 16px;
+}
+.banner-title em { font-style: italic; color: var(--accent); }
+.banner-sub {
+  font-size: 15px; color: rgba(245,242,236,0.55);
+  line-height: 1.7; max-width: 480px;
+}
+.banner-stats {
+  display: flex; flex-direction: column; gap: 16px;
+  padding: 28px; background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px; backdrop-filter: blur(10px);
+}
+.bstat { display: flex; align-items: center; justify-content: space-between; }
+.bstat-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: rgba(245,242,236,0.4); text-transform: uppercase; }
+.bstat-value { font-family: var(--serif); font-size: 28px; color: #f5f2ec; line-height: 1; }
+.bstat-value span { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-left: 4px; }
+.bstat-divider { height: 1px; background: rgba(255,255,255,0.06); }
+
+/* ── STAR DISPLAY ── */
+.stars-display {
+  display: flex; gap: 4px; align-items: center;
+}
+.star-filled { color: var(--gold); font-size: 18px; }
+.star-empty { color: rgba(245,242,236,0.2); font-size: 18px; }
+.stars-num { font-family: var(--serif); font-size: 32px; color: #f5f2ec; margin-right: 8px; line-height: 1; }
+
+/* ── MAIN LAYOUT ── */
+.main-wrap {
+  position: relative; z-index: 1;
+  max-width: 1100px; margin: 0 auto;
+  padding: 60px 40px;
+  display: grid; grid-template-columns: 1fr 340px;
+  gap: 48px; align-items: start;
+}
+
+/* ── REVIEWS FEED ── */
+.feed-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 32px;
+}
+.feed-title { font-family: var(--serif); font-size: 28px; color: var(--text); }
+.feed-count { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 0.1em; }
+
+.sort-bar {
+  display: flex; gap: 4px; margin-bottom: 28px;
+}
+.sort-btn {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+  padding: 6px 14px; border-radius: var(--r);
+  border: 1px solid var(--border2);
+  background: transparent; color: var(--text3);
+  cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+}
+.sort-btn.active, .sort-btn:hover { background: var(--text); color: var(--paper); border-color: var(--text); }
+
+/* ── REVIEW CARD ── */
+.review-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 20px;
+  transition: box-shadow 0.3s, transform 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.review-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  opacity: 0; transition: opacity 0.3s;
+}
+.review-card:hover { box-shadow: 0 8px 40px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.review-card:hover::before { opacity: 1; }
+
+.review-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+.reviewer-info { display: flex; align-items: center; gap: 14px; }
+.reviewer-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); font-size: 18px; font-style: italic;
+  font-weight: 400; color: white; flex-shrink: 0;
+}
+.reviewer-name { font-size: 15px; font-weight: 600; color: var(--text); }
+.reviewer-meta { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 0.06em; margin-top: 3px; }
+
+.review-stars { display: flex; gap: 3px; }
+.rstar { font-size: 14px; }
+.rstar.filled { color: var(--gold); }
+.rstar.empty { color: var(--border2); }
+
+.review-session-badge {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 3px 10px; border-radius: 100px;
+  background: var(--paper2); color: var(--text3); border: 1px solid var(--border);
+  margin-bottom: 14px; display: inline-block;
+}
+
+.review-text {
+  font-size: 14px; color: var(--text2); line-height: 1.75;
+  font-style: italic; margin-bottom: 18px;
+  border-left: 2px solid var(--border2); padding-left: 16px;
+}
+
+.review-footer {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.review-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.rtag {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em;
+  padding: 3px 8px; border-radius: 4px;
+  background: var(--paper2); color: var(--text3);
+  border: 1px solid var(--border);
+}
+
+.review-actions { display: flex; align-items: center; gap: 12px; }
+.action-btn {
+  background: none; border: none; cursor: pointer;
+  font-family: var(--sans); font-size: 12px; font-weight: 500;
+  color: var(--text3); display: flex; align-items: center; gap: 5px;
+  transition: color 0.2s; padding: 4px 0;
+}
+.action-btn:hover { color: var(--accent2); }
+.action-btn svg { width: 13px; height: 13px; }
+.like-btn.liked { color: var(--rust); }
+
+/* ── REPLY THREAD ── */
+.replies-wrap {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+.replies-label {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em;
+  color: var(--text3); text-transform: uppercase; margin-bottom: 14px;
+}
+.reply-item {
+  display: flex; gap: 12px; margin-bottom: 14px;
+  padding: 14px; background: var(--paper); border-radius: 10px;
+  border: 1px solid var(--border); position: relative;
+  animation: replySlide 0.3s ease;
+}
+@keyframes replySlide {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.reply-avatar {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); font-size: 13px; font-style: italic; color: white;
+}
+.reply-content { flex: 1; }
+.reply-author { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.reply-author span { font-family: var(--mono); font-size: 9px; color: var(--text3); font-weight: 400; margin-left: 8px; letter-spacing: 0.06em; }
+.reply-text { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+.reply-input-row {
+  display: flex; gap: 10px; margin-top: 12px; align-items: center;
+}
+.reply-input-row .mini-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); font-size: 11px; font-style: italic; color: white;
+  flex-shrink: 0;
+}
+.reply-field {
+  flex: 1; padding: 9px 14px; border: 1px solid var(--border2);
+  border-radius: 100px; font-family: var(--sans); font-size: 12px;
+  color: var(--text); background: var(--paper); outline: none;
+  transition: border-color 0.2s;
+}
+.reply-field:focus { border-color: var(--accent2); }
+.reply-submit {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--deep); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s; flex-shrink: 0;
+}
+.reply-submit:hover { background: var(--accent2); }
+.reply-submit svg { color: white; width: 13px; height: 13px; }
+
+/* ── SIDEBAR ── */
+.sidebar { position: sticky; top: 80px; }
+
+.write-card {
+  background: var(--deep);
+  border-radius: 20px;
+  padding: 32px;
+  margin-bottom: 24px;
+  position: relative; overflow: hidden;
+}
+.write-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 20% 0%, rgba(0,200,255,0.1) 0%, transparent 60%);
+  pointer-events: none;
+}
+.write-chip {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--accent);
+  background: rgba(0,200,255,0.1); border: 1px solid rgba(0,200,255,0.2);
+  padding: 4px 12px; border-radius: 100px;
+  display: inline-block; margin-bottom: 16px;
+}
+.write-title {
+  font-family: var(--serif); font-size: 22px; color: #f5f2ec;
+  line-height: 1.2; margin-bottom: 8px;
+}
+.write-sub { font-size: 12px; color: rgba(245,242,236,0.45); line-height: 1.6; margin-bottom: 24px; }
+
+.field-label {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em;
+  text-transform: uppercase; color: rgba(245,242,236,0.4);
+  margin-bottom: 8px; display: block;
+}
+
+.star-picker { display: flex; gap: 6px; margin-bottom: 20px; }
+.star-pick {
+  font-size: 24px; cursor: pointer; transition: transform 0.15s;
+  color: rgba(245,242,236,0.2); line-height: 1;
+  background: none; border: none; padding: 0;
+}
+.star-pick:hover, .star-pick.selected { transform: scale(1.2); color: var(--gold); }
+
+.session-select {
+  width: 100%; padding: 10px 14px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px; color: rgba(245,242,236,0.8); font-family: var(--sans); font-size: 13px;
+  outline: none; cursor: pointer; margin-bottom: 16px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(245,242,236,0.4)' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+.session-select option { background: #1a1c20; }
+
+.review-textarea {
+  width: 100%; min-height: 120px; padding: 14px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px; color: rgba(245,242,236,0.9); font-family: var(--sans); font-size: 13px;
+  line-height: 1.65; outline: none; resize: none; transition: border-color 0.2s;
+  margin-bottom: 16px;
+}
+.review-textarea:focus { border-color: rgba(0,200,255,0.4); }
+.review-textarea::placeholder { color: rgba(245,242,236,0.25); }
+
+.tag-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+.tag-opt {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em;
+  padding: 5px 10px; border-radius: 4px; cursor: pointer;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(245,242,236,0.4); transition: all 0.2s;
+}
+.tag-opt.selected {
+  background: rgba(0,200,255,0.15); border-color: rgba(0,200,255,0.4);
+  color: var(--accent);
+}
+.tag-opt:hover { color: rgba(245,242,236,0.7); }
+
+.author-field {
+  width: 100%; padding: 10px 14px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px; color: rgba(245,242,236,0.8); font-family: var(--sans); font-size: 13px;
+  outline: none; margin-bottom: 16px; transition: border-color 0.2s;
+}
+.author-field:focus { border-color: rgba(0,200,255,0.4); }
+.author-field::placeholder { color: rgba(245,242,236,0.25); }
+
+.submit-btn {
+  width: 100%; padding: 14px;
+  background: var(--accent2); border: none; border-radius: 10px;
+  color: white; font-family: var(--sans); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; letter-spacing: 0.02em;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.submit-btn:hover { background: var(--accent); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,200,255,0.3); }
+.submit-btn:active { transform: translateY(0); }
+
+/* ── DISTRIBUTION CARD ── */
+.dist-card {
+  background: white; border: 1px solid var(--border); border-radius: 16px; padding: 24px;
+}
+.dist-title { font-family: var(--serif); font-size: 18px; color: var(--text); margin-bottom: 20px; }
+.dist-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.dist-label { font-family: var(--mono); font-size: 10px; color: var(--text3); width: 20px; text-align: right; }
+.dist-bar-wrap { flex: 1; height: 6px; background: var(--paper2); border-radius: 3px; overflow: hidden; }
+.dist-bar { height: 100%; background: var(--gold); border-radius: 3px; transition: width 1s ease; }
+.dist-num { font-family: var(--mono); font-size: 10px; color: var(--text3); width: 24px; }
+
+/* ── SUCCESS TOAST ── */
+.toast {
+  position: fixed; bottom: 32px; right: 32px; z-index: 999;
+  background: var(--deep); color: #f5f2ec;
+  padding: 16px 24px; border-radius: 12px;
+  border: 1px solid rgba(0,200,255,0.3);
+  font-size: 13px; font-weight: 500;
+  display: flex; align-items: center; gap: 10px;
+  transform: translateY(80px); opacity: 0;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  border: 1px dashed var(--border2); border-radius: 16px;
+}
+.empty-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.5; }
+.empty-text { font-family: var(--serif); font-size: 20px; color: var(--text3); margin-bottom: 8px; }
+.empty-sub { font-size: 13px; color: var(--text3); }
+
+/* ── DIVIDER ── */
+.ornament-divider {
+  display: flex; align-items: center; gap: 16px;
+  margin: 40px 0; color: var(--text3); font-size: 12px;
+  font-family: var(--mono); letter-spacing: 0.1em;
+}
+.ornament-divider::before, .ornament-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border2);
+}
+
+/* ── FOOTER ── */
+footer {
+  position: relative; z-index: 1;
+  border-top: 1px solid var(--border);
+  padding: 28px 40px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.footer-note { font-family: var(--mono); font-size: 11px; color: var(--text3); letter-spacing: 0.06em; }
+.footer-warning {
+  font-size: 11px; color: #a0640a;
+  background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.25);
+  padding: 5px 12px; border-radius: 6px; font-family: var(--mono);
+}
+
+@media (max-width: 900px) {
+  .banner-grid { grid-template-columns: 1fr; }
+  .banner-stats { display: none; }
+  .main-wrap { grid-template-columns: 1fr; }
+  .sidebar { position: static; }
+  nav { padding: 0 20px; }
+  .nav-center { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="index.html">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+        <path d="M8 12h1l2-4 2 8 2-5 1 1h2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span class="logo-name">Respi<span>Core</span></span>
+  </a>
+  <div class="nav-center">Community Voices</div>
+  <a class="btn-back" href="index.html">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+    Back to App
+  </a>
+</nav>
+
+<!-- HERO BANNER -->
+<div class="hero-banner">
+  <div class="banner-grid">
+    <div>
+      <span class="banner-chip">Community Feedback</span>
+      <h1 class="banner-title">Real voices,<br><em>real sessions.</em></h1>
+      <p class="banner-sub">Every review here is from someone who used RespiCore. No filters, no curation — just honest reflections on a tool built to democratise respiratory care.</p>
+    </div>
+    <div class="banner-stats" id="bannerStats">
+      <div class="bstat">
+        <span class="bstat-label">Average Rating</span>
+        <div class="stars-display">
+          <span class="stars-num" id="avgRatingDisplay">—</span>
+          <span class="star-filled">★</span>
+        </div>
+      </div>
+      <div class="bstat-divider"></div>
+      <div class="bstat">
+        <span class="bstat-label">Total Reviews</span>
+        <span class="bstat-value" id="totalReviewsDisplay">0 <span>reviews</span></span>
+      </div>
+      <div class="bstat-divider"></div>
+      <div class="bstat">
+        <span class="bstat-label">Total Replies</span>
+        <span class="bstat-value" id="totalRepliesDisplay">0 <span>replies</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-wrap">
+
+  <!-- FEED -->
+  <div>
+    <div class="feed-header">
+      <h2 class="feed-title">Session Reviews</h2>
+      <span class="feed-count" id="feedCountLabel">0 ENTRIES</span>
+    </div>
+
+    <div class="sort-bar">
+      <button class="sort-btn active" onclick="sortReviews('newest', this)">Newest</button>
+      <button class="sort-btn" onclick="sortReviews('highest', this)">Top Rated</button>
+      <button class="sort-btn" onclick="sortReviews('most_replies', this)">Most Discussed</button>
+    </div>
+
+    <div id="reviewsFeed">
+      <!-- populated by JS -->
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- Write review card -->
+    <div class="write-card">
+      <span class="write-chip">Share Your Experience</span>
+      <h3 class="write-title">Leave a review</h3>
+      <p class="write-sub">Tried RespiCore? Tell the community what you thought. Every voice shapes what we build next.</p>
+
+      <label class="field-label">Your name</label>
+      <input type="text" class="author-field" id="authorName" placeholder="e.g. Dr. Sinha, Anonymous…">
+
+      <label class="field-label">Your rating</label>
+      <div class="star-picker" id="starPicker">
+        <button class="star-pick" data-val="1" onclick="pickStar(1)">★</button>
+        <button class="star-pick" data-val="2" onclick="pickStar(2)">★</button>
+        <button class="star-pick" data-val="3" onclick="pickStar(3)">★</button>
+        <button class="star-pick" data-val="4" onclick="pickStar(4)">★</button>
+        <button class="star-pick" data-val="5" onclick="pickStar(5)">★</button>
+      </div>
+
+      <label class="field-label">Session type</label>
+      <select class="session-select" id="sessionType">
+        <option value="">Select a session…</option>
+        <option value="Normal Cough Check">Normal Cough Check</option>
+        <option value="COPD Screening">COPD Screening</option>
+        <option value="Wheeze Detection">Wheeze Detection</option>
+        <option value="Anomalous Pattern Scan">Anomalous Pattern Scan</option>
+        <option value="Bronchitis Assessment">Bronchitis Assessment</option>
+        <option value="General Demo Run">General Demo Run</option>
+      </select>
+
+      <label class="field-label">Your thoughts</label>
+      <textarea class="review-textarea" id="reviewText" placeholder="What surprised you? What worked well? Any issues?"></textarea>
+
+      <label class="field-label">Tags (pick any)</label>
+      <div class="tag-picker" id="tagPicker">
+        <span class="tag-opt" onclick="toggleTag(this)">Accurate</span>
+        <span class="tag-opt" onclick="toggleTag(this)">Fast</span>
+        <span class="tag-opt" onclick="toggleTag(this)">Easy to use</span>
+        <span class="tag-opt" onclick="toggleTag(this)">Privacy-first</span>
+        <span class="tag-opt" onclick="toggleTag(this)">Impressive AI</span>
+        <span class="tag-opt" onclick="toggleTag(this)">Needs work</span>
+        <span class="tag-opt" onclick="toggleTag(this)">Offline ready</span>
+        <span class="tag-opt" onclick="toggleTag(this)">Clinical feel</span>
+      </div>
+
+      <button class="submit-btn" onclick="submitReview()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+        Post Review
+      </button>
+    </div>
+
+    <!-- Rating distribution -->
+    <div class="dist-card" id="distCard">
+      <div class="dist-title">Rating breakdown</div>
+      <div id="distBars">
+        <div class="dist-row"><span class="dist-label">5</span><div class="dist-bar-wrap"><div class="dist-bar" id="bar5" style="width:0%"></div></div><span class="dist-num" id="cnt5">0</span></div>
+        <div class="dist-row"><span class="dist-label">4</span><div class="dist-bar-wrap"><div class="dist-bar" id="bar4" style="width:0%"></div></div><span class="dist-num" id="cnt4">0</span></div>
+        <div class="dist-row"><span class="dist-label">3</span><div class="dist-bar-wrap"><div class="dist-bar" id="bar3" style="width:0%"></div></div><span class="dist-num" id="cnt3">0</span></div>
+        <div class="dist-row"><span class="dist-label">2</span><div class="dist-bar-wrap"><div class="dist-bar" id="bar2" style="width:0%"></div></div><span class="dist-num" id="cnt2">0</span></div>
+        <div class="dist-row"><span class="dist-label">1</span><div class="dist-bar-wrap"><div class="dist-bar" id="bar1" style="width:0%"></div></div><span class="dist-num" id="cnt1">0</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <span class="footer-note">© 2025 RespiCore. All rights reserved.</span>
+  <span class="footer-warning">⚠ Research prototype — not a clinical diagnostic device</span>
+</footer>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toastMsg">Review posted!</span>
+</div>
+
+<script>
+// ── Avatar colours ──
+const AV_COLORS = [
+  'linear-gradient(135deg,#00c8ff,#0090d4)',
+  'linear-gradient(135deg,#c9a84c,#a06030)',
+  'linear-gradient(135deg,#4a7c59,#2d5840)',
+  'linear-gradient(135deg,#c45c3a,#9c3a20)',
+  'linear-gradient(135deg,#7b5ea7,#4a3080)',
+  'linear-gradient(135deg,#3a7fc1,#1a5090)',
+];
+function getColor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h += name.charCodeAt(i);
+  return AV_COLORS[h % AV_COLORS.length];
+}
+function initials(name) { return name.trim()[0]?.toUpperCase() || '?'; }
+
+// ── State ──
+let reviews = JSON.parse(localStorage.getItem('respicore_reviews') || '[]');
+let selectedStars = 0;
+let selectedTags = [];
+let sortMode = 'newest';
+
+// Seed some starter reviews if empty
+if (reviews.length === 0) {
+  reviews = [
+    {
+      id: 'r1', author: 'Dr. Meera Iyer', rating: 5,
+      session: 'COPD Screening', text: 'Genuinely impressive. The spectral analysis caught a subtle wheeze pattern I had been second-guessing in a follow-up patient. The fact that it works completely offline is a game changer for rural clinic scenarios.',
+      tags: ['Accurate','Privacy-first','Clinical feel'], likes: 12, liked: false,
+      time: Date.now() - 86400000 * 3,
+      replies: [
+        { id: 'rp1', author: 'RespiCore Team', text: 'Thank you Dr. Iyer — feedback like this keeps us going. We are exploring an audiologist review mode for the next build.', time: Date.now() - 86400000 * 2 },
+        { id: 'rp2', author: 'Karan M.', text: 'Had a very similar experience during a village health camp. The 50ms inference on an old Redmi phone was honestly jaw-dropping.', time: Date.now() - 86400000 * 1 }
+      ]
+    },
+    {
+      id: 'r2', author: 'Priya S.', rating: 4,
+      session: 'General Demo Run', text: 'Smooth UI and the waveform visualiser is satisfying to watch. Would love a confidence interval shown alongside the classification — even a simple ±X% range would help users gauge reliability.',
+      tags: ['Easy to use','Fast','Impressive AI'], likes: 7, liked: false,
+      time: Date.now() - 86400000 * 1,
+      replies: [
+        { id: 'rp3', author: 'Adhrikto', text: 'Great suggestion — a calibrated confidence band is on our model roadmap. Currently post-softmax probabilities are shown in the probability bars, but a proper interval display would be much cleaner.', time: Date.now() - 82400000 }
+      ]
+    },
+    {
+      id: 'r3', author: 'Tanvir H.', rating: 5,
+      session: 'Wheeze Detection', text: 'Used this as a reference tool alongside a stethoscope during a pediatrics outreach. The wheeze flag aligned with clinical auscultation in 4 out of 5 cases. For a prototype this is remarkable.',
+      tags: ['Accurate','Offline ready','Clinical feel'], likes: 19, liked: false,
+      time: Date.now() - 86400000 * 5,
+      replies: []
+    },
+  ];
+  saveReviews();
+}
+
+function saveReviews() {
+  localStorage.setItem('respicore_reviews', JSON.stringify(reviews));
+}
+
+// ── Star picker ──
+function pickStar(n) {
+  selectedStars = n;
+  document.querySelectorAll('.star-pick').forEach((s, i) => {
+    s.classList.toggle('selected', i < n);
+  });
+}
+
+function toggleTag(el) {
+  el.classList.toggle('selected');
+  const tag = el.textContent;
+  if (el.classList.contains('selected')) selectedTags.push(tag);
+  else selectedTags = selectedTags.filter(t => t !== tag);
+}
+
+// ── Submit review ──
+function submitReview() {
+  const author = document.getElementById('authorName').value.trim() || 'Anonymous';
+  const text = document.getElementById('reviewText').value.trim();
+  const session = document.getElementById('sessionType').value;
+
+  if (!text) { showToast('Please write something before posting ✍️'); return; }
+  if (!selectedStars) { showToast('Please pick a star rating ★'); return; }
+
+  const review = {
+    id: 'r' + Date.now(),
+    author, rating: selectedStars, session: session || 'General Demo Run',
+    text, tags: [...selectedTags], likes: 0, liked: false,
+    time: Date.now(), replies: []
+  };
+
+  reviews.unshift(review);
+  saveReviews();
+
+  // Reset form
+  document.getElementById('authorName').value = '';
+  document.getElementById('reviewText').value = '';
+  document.getElementById('sessionType').value = '';
+  document.querySelectorAll('.star-pick').forEach(s => s.classList.remove('selected'));
+  document.querySelectorAll('.tag-opt').forEach(s => s.classList.remove('selected'));
+  selectedStars = 0; selectedTags = [];
+
+  renderFeed();
+  updateStats();
+  showToast('Your review is live — thank you! 🙌');
+}
+
+// ── Sorting ──
+function sortReviews(mode, btn) {
+  sortMode = mode;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFeed();
+}
+
+function getSorted() {
+  const copy = [...reviews];
+  if (sortMode === 'newest') return copy.sort((a,b) => b.time - a.time);
+  if (sortMode === 'highest') return copy.sort((a,b) => b.rating - a.rating);
+  if (sortMode === 'most_replies') return copy.sort((a,b) => b.replies.length - a.replies.length);
+  return copy;
+}
+
+// ── Render ──
+function renderFeed() {
+  const feed = document.getElementById('reviewsFeed');
+  const sorted = getSorted();
+  document.getElementById('feedCountLabel').textContent = sorted.length + ' ENTR' + (sorted.length === 1 ? 'Y' : 'IES');
+
+  if (!sorted.length) {
+    feed.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">✦</div>
+      <div class="empty-text">No reviews yet</div>
+      <div class="empty-sub">Be the first to share your RespiCore experience</div>
+    </div>`;
+    return;
+  }
+
+  feed.innerHTML = sorted.map(r => renderCard(r)).join('');
+}
+
+function starsHTML(n, size = 14) {
+  let s = '';
+  for (let i = 1; i <= 5; i++) {
+    s += `<span class="rstar ${i<=n?'filled':'empty'}" style="font-size:${size}px">★</span>`;
+  }
+  return s;
+}
+
+function timeAgo(ts) {
+  const d = Math.floor((Date.now() - ts) / 1000);
+  if (d < 60) return 'just now';
+  if (d < 3600) return Math.floor(d/60) + 'm ago';
+  if (d < 86400) return Math.floor(d/3600) + 'h ago';
+  return Math.floor(d/86400) + 'd ago';
+}
+
+function renderCard(r) {
+  const repliesHTML = r.replies.map(rp => `
+    <div class="reply-item">
+      <div class="reply-avatar" style="background:${getColor(rp.author)}">${initials(rp.author)}</div>
+      <div class="reply-content">
+        <div class="reply-author">${rp.author} <span>${timeAgo(rp.time)}</span></div>
+        <div class="reply-text">${rp.text}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const tagsHTML = r.tags.map(t => `<span class="rtag">${t}</span>`).join('');
+
+  return `<div class="review-card" id="card-${r.id}">
+    <div class="review-head">
+      <div class="reviewer-info">
+        <div class="reviewer-avatar" style="background:${getColor(r.author)}">${initials(r.author)}</div>
+        <div>
+          <div class="reviewer-name">${r.author}</div>
+          <div class="reviewer-meta">${timeAgo(r.time)}</div>
+        </div>
+      </div>
+      <div class="review-stars">${starsHTML(r.rating)}</div>
+    </div>
+    <span class="review-session-badge">◉ ${r.session}</span>
+    <p class="review-text">${r.text}</p>
+    <div class="review-footer">
+      <div class="review-tags">${tagsHTML}</div>
+      <div class="review-actions">
+        <button class="action-btn like-btn ${r.liked ? 'liked' : ''}" onclick="toggleLike('${r.id}')">
+          <svg viewBox="0 0 24 24" fill="${r.liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+          </svg>
+          ${r.likes}
+        </button>
+        <button class="action-btn" onclick="toggleReplyBox('${r.id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          </svg>
+          Reply
+        </button>
+      </div>
+    </div>
+
+    ${r.replies.length > 0 || true ? `
+    <div class="replies-wrap">
+      ${r.replies.length > 0 ? `<div class="replies-label">↳ ${r.replies.length} ${r.replies.length === 1 ? 'reply' : 'replies'}</div>` : ''}
+      <div id="replies-${r.id}">${repliesHTML}</div>
+      <div class="reply-input-row" id="replyBox-${r.id}" style="display:none">
+        <div class="mini-avatar">Y</div>
+        <input type="text" class="reply-field" id="replyField-${r.id}" placeholder="Write a reply…" onkeydown="if(event.key==='Enter') postReply('${r.id}')">
+        <button class="reply-submit" onclick="postReply('${r.id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    ` : ''}
+  </div>`;
+}
+
+function toggleReplyBox(id) {
+  const box = document.getElementById('replyBox-' + id);
+  if (!box) return;
+  const visible = box.style.display !== 'none';
+  box.style.display = visible ? 'none' : 'flex';
+  if (!visible) document.getElementById('replyField-' + id)?.focus();
+}
+
+function postReply(reviewId) {
+  const field = document.getElementById('replyField-' + reviewId);
+  const text = field?.value.trim();
+  if (!text) return;
+
+  const review = reviews.find(r => r.id === reviewId);
+  if (!review) return;
+
+  const reply = {
+    id: 'rp' + Date.now(),
+    author: 'You', text, time: Date.now()
+  };
+  review.replies.push(reply);
+  saveReviews();
+
+  // Inject reply directly without full re-render
+  const repliesEl = document.getElementById('replies-' + reviewId);
+  if (repliesEl) {
+    const div = document.createElement('div');
+    div.className = 'reply-item';
+    div.innerHTML = `
+      <div class="reply-avatar" style="background:${getColor('You')}">Y</div>
+      <div class="reply-content">
+        <div class="reply-author">You <span>just now</span></div>
+        <div class="reply-text">${text}</div>
+      </div>`;
+    repliesEl.appendChild(div);
+  }
+
+  field.value = '';
+  document.getElementById('replyBox-' + reviewId).style.display = 'none';
+  updateStats();
+  showToast('Reply posted! 💬');
+}
+
+function toggleLike(id) {
+  const r = reviews.find(r => r.id === id);
+  if (!r) return;
+  r.liked = !r.liked;
+  r.likes += r.liked ? 1 : -1;
+  saveReviews();
+  const btn = document.querySelector(`#card-${id} .like-btn`);
+  if (btn) {
+    btn.classList.toggle('liked', r.liked);
+    btn.querySelector('svg').setAttribute('fill', r.liked ? 'currentColor' : 'none');
+    btn.childNodes[btn.childNodes.length - 1].textContent = ' ' + r.likes;
+  }
+}
+
+// ── Stats ──
+function updateStats() {
+  const total = reviews.length;
+  const totalReplies = reviews.reduce((a, r) => a + r.replies.length, 0);
+  const avg = total ? (reviews.reduce((a,r) => a+r.rating, 0)/total).toFixed(1) : '—';
+
+  document.getElementById('avgRatingDisplay').textContent = avg;
+  document.getElementById('totalReviewsDisplay').innerHTML = total + ' <span>reviews</span>';
+  document.getElementById('totalRepliesDisplay').innerHTML = totalReplies + ' <span>replies</span>';
+  document.getElementById('feedCountLabel').textContent = total + ' ENTR' + (total===1?'Y':'IES');
+
+  // Distribution
+  const max = Math.max(1, total);
+  for (let i = 1; i <= 5; i++) {
+    const c = reviews.filter(r => r.rating === i).length;
+    const bar = document.getElementById('bar' + i);
+    const cnt = document.getElementById('cnt' + i);
+    if (bar) bar.style.width = (c/max*100) + '%';
+    if (cnt) cnt.textContent = c;
+  }
+}
+
+// ── Toast ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Init ──
+renderFeed();
+updateStats();
+</script>
+</body>
+</html>
